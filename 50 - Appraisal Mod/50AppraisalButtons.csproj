@@ -18,10 +18,12 @@
   <PropertyGroup>
     <ManagedDir>$(GameDir)\Probably Stolen_Data\Managed</ManagedDir>
     <ModInstallDir>$(GameDir)\Mods\50AppraisalButtons</ModInstallDir>
-    <!-- Release packages (gitignored). packages\steam\preview.jpg (or .png) is the user's preview image: the Workshop
+    <!-- Release packages (gitignored) live in the repo-root packages\ folder, one "<N> - packages" folder per mod:
+         ..\packages\50 - packages\. Its steam\preview.jpg (or .png) is the user's preview image: the Workshop
          preview (must be under 1 MB) and, shipped as preview.png, the Mods menu banner. The game only looks for
-         preview.png, and Unity's LoadImage decodes JPEG data under that name too. -->
-    <PackagesDir>$(MSBuildProjectDirectory)\packages</PackagesDir>
+         preview.png, and Unity's LoadImage decodes JPEG data under that name too.
+         NormalizePath gives a full path without "..", so a regenerated workshop.vdf gets clean absolute paths. -->
+    <PackagesDir>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', 'packages', '50 - packages'))</PackagesDir>
     <!-- tools\ holds separate release helpers; their sources must not compile into the mod DLL. -->
     <DefaultItemExcludes>$(DefaultItemExcludes);tools\**;packages\**</DefaultItemExcludes>
     <PreviewImage>$(PackagesDir)\steam\preview.png</PreviewImage>
@@ -80,10 +82,10 @@
     <Message Importance="high" Text="Installed into $(ModInstallDir)" />
   </Target>
 
-  <!-- dotnet build -c Release -t:Package
-       packages\steam\50AppraisalButtons\   Workshop content folder (only what ships)
-       packages\steam\workshop.vdf          steamcmd item file, written once so steamcmd's published id is kept
-       packages\nexus\50AppraisalButtons-<ModVersion>.zip   contains 50AppraisalButtons\ at its root -->
+  <!-- dotnet build -c Release -t:Package   (run in this mod folder; output goes to $(PackagesDir) = ..\packages\50 - packages\)
+       steam\50AppraisalButtons\   Workshop content folder (only what ships)
+       steam\workshop.vdf          steamcmd item file, written once so steamcmd's published id is kept
+       nexus\50AppraisalButtons-<ModVersion>.zip   contains 50AppraisalButtons\ at its root -->
   <Target Name="Package" DependsOnTargets="Build">
     <XmlPeek XmlInputPath="manifest.xml" Query="/Manifest/ModVersion/text()">
       <Output TaskParameter="Result" PropertyName="ModVersion" />

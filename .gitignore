@@ -9,7 +9,7 @@ obj/
 packages/
 
 # Third-party binaries for tools/WorkshopLocalize (Steamworks.NET + Valve's steam_api64.dll); see its .csproj
-tools/WorkshopLocalize/lib/
+**/tools/WorkshopLocalize/lib/
 
 # IDE
 .vs/

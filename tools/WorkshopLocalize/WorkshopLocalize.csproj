@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Release helper, not part of the mod. Pushes packages\steam\descriptions\<language>.bbcode to the Workshop item
+  <!-- Release helper, not part of the mod. Pushes the repo-root packages\50 - packages\steam\descriptions\<language>.bbcode to the Workshop item
        as per-language title and description through ISteamUGC (steamcmd can only write the English text).
        lib\ (gitignored) holds Steamworks.NET.dll and Valve's steam_api64.dll from the Steamworks.NET 2024.8.0
        Standalone release (Windows-x64): https://github.com/rlabrecque/Steamworks.NET/releases/tag/2024.8.0 -->

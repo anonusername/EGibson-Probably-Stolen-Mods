@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Steamworks;
 
-// Pushes each packages\steam\descriptions\<language>.bbcode to the Workshop item as that language's title and
+// Pushes each packages\50 - packages\steam\descriptions\<language>.bbcode (repo-root packages\) to the Workshop item as that language's title and
 // description, then reads it back to confirm. The file name is the Steam API language code (schinese, koreana, ...).
 // Needs the Steam client running, online, and logged in as the item's owner. A steamcmd login with the same account
 // signs the client out ("Session Replaced"); click Go Online in Steam before running this.
@@ -267,15 +267,16 @@ static string VdfValue(string vdf, string key) =>
     Regex.Match(vdf, "\"" + key + "\"\\s*\"([^\"]*)\"") is { Success: true } m ? m.Groups[1].Value
         : throw new InvalidDataException($"workshop.vdf has no \"{key}\"");
 
-// packages\steam, found by walking up from the working directory (works from the repo or the tool folder).
+// packages\50 - packages\steam (the 50 mod's folder in the repo-root packages\), found by walking up from the working
+// directory (works from the repo root, the mod folder or the tool folder).
 static string FindSteamPackageDir()
 {
     for (var dir = new DirectoryInfo(Directory.GetCurrentDirectory()); dir != null; dir = dir.Parent)
     {
-        string candidate = Path.Combine(dir.FullName, "packages", "steam");
+        string candidate = Path.Combine(dir.FullName, "packages", "50 - packages", "steam");
         if (File.Exists(Path.Combine(candidate, "workshop.vdf"))) return candidate;
     }
-    throw new DirectoryNotFoundException("packages\\steam\\workshop.vdf not found above the working directory");
+    throw new DirectoryNotFoundException("packages\\50 - packages\\steam\\workshop.vdf not found above the working directory");
 }
 
 string? Arg(string name)
