@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Manifest>
+  <ID>jerma_rats</ID>
+  <Name>Jerma Rats</Name>
+  <Author>EVIL Gibson</Author>
+  <ModVersion>0.1</ModVersion>
+  <Description>Brings your rats to life. Every rat breathes, twitches and wiggles when you pick it up, rats get their own pick-up and put-down sounds, and the heaviest rat you own is crowned the Biggest Rat with its own animated look and sounds.</Description>
+  <GameVersions>
+    <Version>0.46</Version>
+  </GameVersions>
+  <Prerequisites />
+  <Assemblies>
+    <Assembly>JermaRats.dll</Assembly>
+  </Assemblies>
+  <Capabilities />
+</Manifest>

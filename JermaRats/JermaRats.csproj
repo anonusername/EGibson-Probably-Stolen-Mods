@@ -1,0 +1,127 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>JermaRats</AssemblyName>
+    <RootNamespace>JermaRats</RootNamespace>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <!-- The game folder comes from the GAME_DIR= line of the gitignored SENSITIVE.md.
+       Override with: dotnet build -c Release -p:GameDir="<game folder>" -->
+  <PropertyGroup Condition="'$(GameDir)' == '' And Exists('$(MSBuildProjectDirectory)\SENSITIVE.md')">
+    <GameDir>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\SENSITIVE.md')), '(?m)(?&lt;=^GAME_DIR=)[^\r\n]*').Value.Trim())</GameDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ManagedDir>$(GameDir)\Probably Stolen_Data\Managed</ManagedDir>
+    <ModInstallDir>$(GameDir)\Mods\JermaRats</ModInstallDir>
+    <!-- Release packages (gitignored): repo-root packages\JermaRats - packages\. -->
+    <PackagesDir>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', 'packages', 'JermaRats - packages'))</PackagesDir>
+    <!-- Never compiled or shipped: helper scripts, art sources, extracted game reference (game property). -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);tools\**;art-src\**;game-reference\**;packages\**</DefaultItemExcludes>
+    <!-- Mods menu banner / Workshop preview: preview.png in this folder wins, else the packages folder's preview. -->
+    <PreviewImage>$(PackagesDir)\steam\preview.png</PreviewImage>
+    <PreviewImage Condition="Exists('$(PackagesDir)\steam\preview.jpg')">$(PackagesDir)\steam\preview.jpg</PreviewImage>
+    <PreviewImage Condition="Exists('$(MSBuildProjectDirectory)\preview.png')">$(MSBuildProjectDirectory)\preview.png</PreviewImage>
+    <SteamContentDir>$(PackagesDir)\steam\JermaRats</SteamContentDir>
+    <NexusStageDir>$(PackagesDir)\nexus\stage</NexusStageDir>
+  </PropertyGroup>
+
+  <!-- Every reference stays Private=false: a second DLL in the mod folder stops the mod from loading. -->
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(ManagedDir)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(ManagedDir)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(ManagedDir)\UnityEngine.AudioModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(ManagedDir)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(ManagedDir)\UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(ManagedDir)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Everything the game loads besides the DLL. %(RelativeDir) keeps Textures\Items\ and Sounds\ in the
+       destination (create-mod.bat's %(RecursiveDir) would flatten Textures\Items\ to Items\). -->
+  <ItemGroup>
+    <ModFile Include="manifest.xml;Textures\Items\*.png;Sounds\*.wav;Sounds\*.ogg;Sounds\*.mp3" />
+  </ItemGroup>
+
+  <Target Name="CheckGameDir" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(ManagedDir)\Assembly-CSharp.dll')"
+           Text="Game DLLs not found in '$(ManagedDir)'. Add a line 'GAME_DIR=&lt;folder containing Probably Stolen.exe&gt;' to SENSITIVE.md, or pass -p:GameDir=..." />
+  </Target>
+
+  <!-- After every build, install into <game>\Mods\JermaRats\ (skip with -p:InstallMod=false). The folder is
+       recreated so deleted placeholders don't linger next to their replacements. -->
+  <Target Name="InstallMod" AfterTargets="Build" Condition="'$(InstallMod)' != 'false'">
+    <RemoveDir Directories="$(ModInstallDir)\Textures;$(ModInstallDir)\Sounds" />
+    <MakeDir Directories="$(ModInstallDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModInstallDir)" />
+    <Copy SourceFiles="@(ModFile)" DestinationFiles="@(ModFile->'$(ModInstallDir)\%(RelativeDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="$(PreviewImage)" DestinationFiles="$(ModInstallDir)\preview.png" Condition="Exists('$(PreviewImage)')" />
+    <Message Importance="high" Text="Installed into $(ModInstallDir)" />
+  </Target>
+
+  <!-- dotnet build -c Release -t:Package   (output goes to ..\packages\JermaRats - packages\)
+       steam\JermaRats\   Workshop content folder (only what ships)
+       steam\workshop.vdf  steamcmd item file, written once (publishedfileid 0 = steamcmd creates a NEW item for
+                           this mod the first time and writes its id back; never reuse the 50 mod's id)
+       nexus\JermaRats-<ModVersion>.zip   contains JermaRats\ at its root -->
+  <Target Name="Package" DependsOnTargets="Build">
+    <XmlPeek XmlInputPath="manifest.xml" Query="/Manifest/ModVersion/text()">
+      <Output TaskParameter="Result" PropertyName="ModVersion" />
+    </XmlPeek>
+    <PropertyGroup>
+      <SteamDescriptionFile>$(PackagesDir)\steam\descriptions\english.bbcode</SteamDescriptionFile>
+      <SteamDescription Condition="Exists('$(SteamDescriptionFile)')">$([MSBuild]::Escape($([System.IO.File]::ReadAllText('$(SteamDescriptionFile)').Trim())))</SteamDescription>
+    </PropertyGroup>
+
+    <RemoveDir Directories="$(SteamContentDir);$(NexusStageDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SteamContentDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(NexusStageDir)\JermaRats" />
+    <Copy SourceFiles="@(ModFile)" DestinationFiles="@(ModFile->'$(SteamContentDir)\%(RelativeDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(ModFile)" DestinationFiles="@(ModFile->'$(NexusStageDir)\JermaRats\%(RelativeDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="$(PreviewImage)" DestinationFiles="$(SteamContentDir)\preview.png" Condition="Exists('$(PreviewImage)')" />
+    <Copy SourceFiles="$(PreviewImage)" DestinationFiles="$(NexusStageDir)\JermaRats\preview.png" Condition="Exists('$(PreviewImage)')" />
+    <ZipDirectory SourceDirectory="$(NexusStageDir)" DestinationFile="$(PackagesDir)\nexus\JermaRats-$(ModVersion).zip" Overwrite="true" />
+
+    <ItemGroup>
+      <VdfLine Include="&quot;workshopitem&quot;" />
+      <VdfLine Include="{" />
+      <VdfLine Include="    &quot;appid&quot;            &quot;4348910&quot;" />
+      <VdfLine Include="    &quot;publishedfileid&quot;  &quot;0&quot;" />
+      <VdfLine Include="    &quot;contentfolder&quot;    &quot;$(SteamContentDir.Replace('\', '\\'))&quot;" />
+      <VdfLine Include="    &quot;previewfile&quot;      &quot;$(PreviewImage.Replace('\', '\\'))&quot;" />
+      <VdfLine Include="    &quot;visibility&quot;       &quot;2&quot;" />
+      <VdfLine Include="    &quot;title&quot;            &quot;Jerma Rats&quot;" />
+      <VdfLine Include="    &quot;description&quot;      &quot;$(SteamDescription)&quot;" />
+      <VdfLine Include="    &quot;changenote&quot;       &quot;First release&quot;" />
+      <VdfLine Include="}" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(PackagesDir)\steam\workshop.vdf" Lines="@(VdfLine)" Condition="!Exists('$(PackagesDir)\steam\workshop.vdf')" />
+
+    <Message Importance="high" Text="Packaged $(ModVersion): $(SteamContentDir) and $(PackagesDir)\nexus\JermaRats-$(ModVersion).zip" />
+  </Target>
+
+</Project>
