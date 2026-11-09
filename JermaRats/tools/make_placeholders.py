@@ -29,7 +29,7 @@ RATE = 44100
 MAGENTA = (255, 0, 255, 255)
 BLACK = (0, 0, 0, 255)
 WHITE = (255, 255, 255, 255)
-CLEAR = (0, 0, 0, 0)
+CLEAR = (0, 0, 0, 3)  # the game's rat tiles use alpha 3, not 0: the whole tile stays clickable
 
 DIGITS = {  # 3x5 pixel font
     "0": ["111", "101", "101", "101", "111"], "1": ["010", "110", "010", "010", "111"],

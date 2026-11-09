@@ -18,3 +18,4 @@ packages/
 
 # Game assets extracted for reference (game property: never commit or redistribute)
 **/game-reference/
+**/OriginalRats/

@@ -20,7 +20,7 @@
     <!-- Release packages (gitignored): repo-root packages\JermaRats - packages\. -->
     <PackagesDir>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', 'packages', 'JermaRats - packages'))</PackagesDir>
     <!-- Never compiled or shipped: helper scripts, art sources, extracted game reference (game property). -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);tools\**;art-src\**;game-reference\**;packages\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);tools\**;art-src\**;game-reference\**;OriginalRats\**;packages\**</DefaultItemExcludes>
     <!-- Mods menu banner / Workshop preview: preview.png in this folder wins, else the packages folder's preview. -->
     <PreviewImage>$(PackagesDir)\steam\preview.png</PreviewImage>
     <PreviewImage Condition="Exists('$(PackagesDir)\steam\preview.jpg')">$(PackagesDir)\steam\preview.jpg</PreviewImage>
