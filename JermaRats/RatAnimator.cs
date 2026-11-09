@@ -31,6 +31,11 @@ namespace JermaRats
         private string vanillaPath;
         private Sprite lastFrame;
 
+        /// <summary>For the F9 log: has this rat's game sprite been recognised (the gate for showing any frames)?</summary>
+        public string FrameStatus => vanillaSprite == null
+            ? "game sprite not recognised yet (no frames can show)"
+            : $"game sprite {vanillaSprite.name}, frames {(lastFrame != null ? "showing " + lastFrame.name : "not showing")}";
+
         public void Bind(GameItemElement el)
         {
             element = el;

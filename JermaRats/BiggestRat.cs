@@ -133,8 +133,17 @@ namespace JermaRats
             {
                 return "JermaRats: no live owned rat, so no Biggest Rat.";
             }
+            string frames = "no animator";
+            if (champion is GameItemElement element && element.handler != null)
+            {
+                RatAnimator animator = element.handler.GetComponent<RatAnimator>();
+                if (animator != null)
+                {
+                    frames = animator.FrameStatus;
+                }
+            }
             return $"JermaRats: Biggest Rat is #{champion.uniqueId}, {RatSetup.Weight(champion):0} g, "
-                + $"age {RatSetup.Age(champion)} day(s), sprite {champion.spritePath}.";
+                + $"age {RatSetup.Age(champion)} day(s), sprite {champion.spritePath}; {frames}.";
         }
     }
 }
